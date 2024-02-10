@@ -1,6 +1,10 @@
 package tinkoff.fintech.lab.ui.list
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,13 +13,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -25,9 +33,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,13 +57,15 @@ fun ListScreenHolder() {
     }
     val state by viewModel.state.collectAsState()
 
-    ListScreen(state)
+    ListScreen(state, viewModel::obtainEvent)
 }
 
 @Composable
-private fun ListScreen(state: ListState) {
+private fun ListScreen(state: ListState, onEvent: (ListEvent) -> Unit) {
+
     Scaffold(
-        topBar = { TopBar() }
+        topBar = { TopBar() },
+        bottomBar = { BottomBar(state.filmType, onEvent) }
     ) { padding ->
         Box(
             contentAlignment = Alignment.Center,
@@ -63,6 +77,7 @@ private fun ListScreen(state: ListState) {
             when (state) {
                 is ListState.Data -> FilmsList(
                     data = state.data,
+                    onEvent = onEvent
                 )
 
                 is ListState.Loading -> CircularProgressIndicator(
@@ -73,6 +88,49 @@ private fun ListScreen(state: ListState) {
         }
     }
 }
+
+@Composable
+private fun BottomBar(filmTypeState: FilmType, onEvent: (ListEvent) -> Unit) {
+    TabRow(
+        selectedTabIndex = filmTypeState.ordinal,
+        modifier = Modifier.background(Color.Green),
+        indicator = {}
+    ) {
+        Tab(
+            selected = filmTypeState == FilmType.POPULAR,
+            onClick = { onEvent.invoke(ListEvent.ChangeFilmType(FilmType.POPULAR)) },
+            modifier = Modifier
+                .clip(RoundedCornerShape(20.dp))
+
+        ) {
+            Text(
+                stringResource(id = R.string.tab_name_popular),
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .size(width = 158.dp, height = 45.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Color.Cyan)
+            )
+        }
+
+        Tab(
+            selected = filmTypeState == FilmType.FAVORITE,
+            onClick = { onEvent.invoke(ListEvent.ChangeFilmType(FilmType.FAVORITE)) },
+            modifier = Modifier
+                .clip(RoundedCornerShape(20.dp))
+        ) {
+            Text(
+                stringResource(id = R.string.tab_name_favorites),
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .size(width = 158.dp, height = 45.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Color.Cyan)
+            )
+        }
+    }
+}
+
 
 @Composable
 private fun TopBar() {
@@ -99,21 +157,22 @@ private fun TopBar() {
 }
 
 @Composable
-private fun FilmsList(data: List<FilmModel>) {
+private fun FilmsList(data: List<FilmModel>, onEvent: (ListEvent) -> Unit) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 10.dp, start = 10.dp, end = 10.dp)
+            .padding(10.dp)
     ) {
         items(items = data) {
-            FilmItem(it)
+            FilmItem(film = it, onEvent = onEvent)
         }
 
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun FilmItem(film: FilmModel) {
+private fun FilmItem(film: FilmModel, onEvent: (ListEvent) -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -125,6 +184,13 @@ private fun FilmItem(film: FilmModel) {
                 shape = RoundedCornerShape(15.dp)
             )
             .background(Color.White)
+            .combinedClickable(
+                onClick = {},
+                onLongClick = {
+                    onEvent.invoke(ListEvent.AddFilmToFavorite(film.id))
+                }
+            )
+
     ) {
         AsyncImage(
             model = film.posterUrlPreview, contentDescription = "item icon",
@@ -143,13 +209,16 @@ private fun FilmItem(film: FilmModel) {
                 text = film.nameRus,
                 fontSize = 16.sp,
                 color = Color.Black,
-                fontWeight = FontWeight.Bold
-
+                fontWeight = FontWeight.Bold,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
+                modifier = Modifier.widthIn(max = 184.dp)
             )
             Text(
                 text = "${film.genres} (${film.year})",
                 fontSize = 14.sp,
-                color = Color.Gray
+                color = Color.Gray,
+                modifier = Modifier.padding(top = 2.dp)
             )
         }
         Icon(
@@ -203,5 +272,5 @@ private fun ListScreenHolderPreview() {
         )
     )
 
-    ListScreen(ListState.Data(data))
+    ListScreen(ListState.Data(data, FilmType.POPULAR), {})
 }
