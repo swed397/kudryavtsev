@@ -41,7 +41,7 @@ fun FilmModel.toUiModel(isFavorite: Boolean): FilmListUiModel =
         filmId = id,
         filmPosterUrl = posterUrlPreview,
         filmTitle = nameRus,
-        filmGenreString = genres,
+        filmGenreString = genre,
         filmYear = year,
         isFavorite = isFavorite
     )

@@ -95,12 +95,19 @@ class ListViewModel @AssistedInject constructor(private val filmRepo: FilmRepo) 
         viewModelScope.launch {
             when (val currentState = _state.value) {
                 is ListState.Data -> {
+                    val mutableVisibleData = currentState.visibleData.toMutableList()
                     val mutableData = currentState.data.toMutableList()
-                    val index = mutableData.indexOfFirst { it.filmId == filmId }
-                    val item = mutableData[index]
-                    mutableData[index] = item.copy(isFavorite = item.isFavorite.not())
 
-                    if (item.isFavorite.not()) {
+                    val indexData = mutableVisibleData.indexOfFirst { it.filmId == filmId }
+                    val itemData = mutableVisibleData[indexData]
+                    mutableData[indexData] = itemData.copy(isFavorite = itemData.isFavorite.not())
+
+                    val indexVisibleData = mutableVisibleData.indexOfFirst { it.filmId == filmId }
+                    val itemVisibleData = mutableVisibleData[indexVisibleData]
+                    mutableVisibleData[indexVisibleData] =
+                        itemVisibleData.copy(isFavorite = itemVisibleData.isFavorite.not())
+
+                    if (itemVisibleData.isFavorite.not()) {
                         val filmResponse = filmRepo.getFilmById(filmId = filmId)
                         filmRepo.saveFilmInDb(filmResponse.toEntity())
                     } else {
@@ -108,21 +115,13 @@ class ListViewModel @AssistedInject constructor(private val filmRepo: FilmRepo) 
                     }
 
                     _state.emit(
-                        ListState.Data(
-                            data = mutableData,
-                            visibleData = mutableData,
-                            filmType = currentState.filmType
-                        )
+                        currentState.copy(data = mutableData, visibleData = mutableVisibleData)
                     )
                 }
 
                 ListState.Loading -> {}
             }
         }
-    }
-
-    private fun getPopularFilms() {
-
     }
 
     @AssistedFactory
