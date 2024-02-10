@@ -4,7 +4,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,25 +18,34 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -47,7 +55,6 @@ import coil.compose.AsyncImage
 import tinkoff.fintech.lab.App
 import tinkoff.fintech.lab.R
 import tinkoff.fintech.lab.di.injectedViewModel
-import tinkoff.fintech.lab.domain.model.FilmModel
 
 @Composable
 fun ListScreenHolder() {
@@ -64,7 +71,7 @@ fun ListScreenHolder() {
 private fun ListScreen(state: ListState, onEvent: (ListEvent) -> Unit) {
 
     Scaffold(
-        topBar = { TopBar() },
+        topBar = { TopBar(state, onEvent) },
         bottomBar = { BottomBar(state.filmType, onEvent) }
     ) { padding ->
         Box(
@@ -76,7 +83,7 @@ private fun ListScreen(state: ListState, onEvent: (ListEvent) -> Unit) {
         ) {
             when (state) {
                 is ListState.Data -> FilmsList(
-                    data = state.data,
+                    data = state.visibleData,
                     onEvent = onEvent
                 )
 
@@ -109,7 +116,7 @@ private fun BottomBar(filmTypeState: FilmType, onEvent: (ListEvent) -> Unit) {
                 modifier = Modifier
                     .size(width = 158.dp, height = 45.dp)
                     .clip(RoundedCornerShape(20.dp))
-                    .background(Color.Cyan)
+                    .background(if (filmTypeState == FilmType.POPULAR) Color.Cyan else Color.Blue)
             )
         }
 
@@ -126,6 +133,7 @@ private fun BottomBar(filmTypeState: FilmType, onEvent: (ListEvent) -> Unit) {
                     .size(width = 158.dp, height = 45.dp)
                     .clip(RoundedCornerShape(20.dp))
                     .background(Color.Cyan)
+                    .background(if (filmTypeState == FilmType.FAVORITE) Color.Cyan else Color.Blue)
             )
         }
     }
@@ -133,7 +141,71 @@ private fun BottomBar(filmTypeState: FilmType, onEvent: (ListEvent) -> Unit) {
 
 
 @Composable
-private fun TopBar() {
+private fun TopBar(state: ListState, onEvent: (ListEvent) -> Unit) {
+    var isSearching by remember { mutableStateOf(false) }
+
+    if (isSearching) {
+        SearchText(onClickIcon = { isSearching = isSearching.not() }, onEvent)
+    } else {
+        ScreenTitle(
+            screenTitle = if (state.filmType == FilmType.POPULAR) stringResource(id = R.string.tab_name_popular) else stringResource(
+                id = R.string.tab_name_favorites
+            ),
+            onClickIcon = { isSearching = isSearching.not() }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SearchText(onClickIcon: () -> Unit, onEvent: (ListEvent) -> Unit) {
+    var searchText by remember { mutableStateOf("") }
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, top = 10.dp)
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.baseline_arrow_back_24),
+            contentDescription = "back arrow search",
+            modifier = Modifier
+                .size(24.dp)
+                .clickable { onClickIcon.invoke() }
+        )
+
+        val keyboardController = LocalSoftwareKeyboardController.current
+
+        OutlinedTextField(
+            value = searchText,
+            onValueChange = { searchText = it },
+            placeholder = {
+                Text(
+                    "Поиск",
+                    color = Color.Gray,
+                    maxLines = 1
+                )
+            },
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                focusedBorderColor = Color.Transparent,
+                unfocusedBorderColor = Color.Transparent
+            ),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    onEvent.invoke(ListEvent.FilterByText(searchText))
+                    keyboardController?.hide()
+                }
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+private fun ScreenTitle(screenTitle: String, onClickIcon: () -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -142,7 +214,7 @@ private fun TopBar() {
             .padding(start = 16.dp, top = 30.dp)
     ) {
         Text(
-            "Популярные",
+            screenTitle,
             fontSize = 25.sp,
             color = Color.Black,
             fontWeight = FontWeight.Bold
@@ -152,12 +224,13 @@ private fun TopBar() {
             contentDescription = "search_icon",
             modifier = Modifier
                 .padding(end = 16.dp)
+                .clickable { onClickIcon.invoke() }
         )
     }
 }
 
 @Composable
-private fun FilmsList(data: List<FilmModel>, onEvent: (ListEvent) -> Unit) {
+private fun FilmsList(data: List<FilmListUiModel>, onEvent: (ListEvent) -> Unit) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -172,7 +245,7 @@ private fun FilmsList(data: List<FilmModel>, onEvent: (ListEvent) -> Unit) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun FilmItem(film: FilmModel, onEvent: (ListEvent) -> Unit) {
+private fun FilmItem(film: FilmListUiModel, onEvent: (ListEvent) -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -187,13 +260,13 @@ private fun FilmItem(film: FilmModel, onEvent: (ListEvent) -> Unit) {
             .combinedClickable(
                 onClick = {},
                 onLongClick = {
-                    onEvent.invoke(ListEvent.AddFilmToFavorite(film.id))
+                    onEvent.invoke(ListEvent.AddFilmToFavorite(film.filmId))
                 }
             )
 
     ) {
         AsyncImage(
-            model = film.posterUrlPreview, contentDescription = "item icon",
+            model = film.filmPosterUrl, contentDescription = "item icon",
             modifier = Modifier
                 .padding(start = 16.dp)
                 .width(40.dp)
@@ -206,7 +279,7 @@ private fun FilmItem(film: FilmModel, onEvent: (ListEvent) -> Unit) {
                 .weight(4f)
         ) {
             Text(
-                text = film.nameRus,
+                text = film.filmTitle,
                 fontSize = 16.sp,
                 color = Color.Black,
                 fontWeight = FontWeight.Bold,
@@ -215,62 +288,51 @@ private fun FilmItem(film: FilmModel, onEvent: (ListEvent) -> Unit) {
                 modifier = Modifier.widthIn(max = 184.dp)
             )
             Text(
-                text = "${film.genres} (${film.year})",
+                text = "${film.filmGenreString} (${film.filmYear})",
                 fontSize = 14.sp,
                 color = Color.Gray,
                 modifier = Modifier.padding(top = 2.dp)
             )
         }
-        Icon(
-            painter = painterResource(id = R.drawable.star), contentDescription = "",
-            modifier = Modifier.weight(1f)
-        )
+        if (film.isFavorite) {
+            Icon(
+                painter = painterResource(id = R.drawable.star), contentDescription = "",
+                modifier = Modifier.weight(1f)
+            )
+        }
     }
 }
-
-data class Film(
-    val name: String
-)
 
 @Composable
 @Preview
 private fun ListScreenHolderPreview() {
 
     val data = listOf(
-        FilmModel(
-            id = 1,
-            nameRus = "Test film",
-            nameEng = "Eng test film",
-            year = 2000,
-            genres = listOf("test"),
-            countries = listOf("test"),
-            rating = "55",
-            posterUrlPreview = "",
-            posterUrl = ""
+        FilmListUiModel(
+            filmId = 1,
+            filmTitle = "Test film",
+            filmYear = 2000,
+            filmGenreString = "test",
+            filmPosterUrl = "",
+            isFavorite = true
         ),
-        FilmModel(
-            id = 2,
-            nameRus = "Test film",
-            nameEng = "Eng test film",
-            year = 2000,
-            genres = listOf("test"),
-            countries = listOf("test"),
-            rating = "55",
-            posterUrlPreview = "",
-            posterUrl = ""
+        FilmListUiModel(
+            filmId = 2,
+            filmTitle = "Test film",
+            filmYear = 2000,
+            filmGenreString = "test",
+            filmPosterUrl = "",
+            isFavorite = false
         ),
-        FilmModel(
-            id = 3,
-            nameRus = "Test film",
-            nameEng = "Eng test film",
-            year = 2000,
-            genres = listOf("test"),
-            countries = listOf("test"),
-            rating = "55",
-            posterUrlPreview = "",
-            posterUrl = ""
+        FilmListUiModel(
+            filmId = 3,
+            filmTitle = "Test film",
+            filmYear = 2000,
+            filmGenreString = "test",
+            filmPosterUrl = "",
+            isFavorite = true
         )
     )
 
-    ListScreen(ListState.Data(data, FilmType.POPULAR), {})
+    ListScreen(ListState.Data(data, data, FilmType.POPULAR), {})
 }

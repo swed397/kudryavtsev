@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 
 data class CurrentFilmResponse(
 
-    @SerializedName("filmId")
+    @SerializedName("kinopoiskId")
     val filmId: Long,
 
     @SerializedName("nameRu")

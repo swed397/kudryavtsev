@@ -13,11 +13,16 @@ class FilmRepo @Inject constructor(
     private val kinopoiskApi: KinopoiskApi
 ) {
 
-    suspend fun getAllFilms(): List<FilmModel> =
+    suspend fun getAllPopularFilms(): List<FilmModel> =
         kinopoiskApi.getTopFilms().films.map { it.toModel() }
 
     suspend fun getFilmById(filmId: Long): CurrentFilmResponse =
         kinopoiskApi.getFilmById(filmId = filmId)
 
     suspend fun saveFilmInDb(filmEntity: FilmEntity) = filmDb.filmDao().insertFilm(filmEntity)
+
+    suspend fun deleteFilmFromDb(filmId: Long) = filmDb.filmDao().deleteFilmById(filmId)
+
+    suspend fun getFavoriteFilms(): List<FilmModel> =
+        filmDb.filmDao().getAllFilms().map { it.toModel() }
 }

@@ -7,5 +7,9 @@ sealed interface ListState {
         get() = FilmType.POPULAR
 
     data object Loading : ListState
-    data class Data(val data: List<FilmModel>, override val filmType: FilmType) : ListState
+    data class Data(
+        val data: List<FilmListUiModel>,
+        val visibleData: List<FilmListUiModel>,
+        override val filmType: FilmType
+    ) : ListState
 }
