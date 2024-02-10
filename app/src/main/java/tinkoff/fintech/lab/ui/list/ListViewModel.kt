@@ -1,6 +1,5 @@
 package tinkoff.fintech.lab.ui.list
 
-import androidx.compose.ui.text.toLowerCase
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.AssistedFactory

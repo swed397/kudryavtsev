@@ -1,7 +1,5 @@
 package tinkoff.fintech.lab.ui.list
 
-import tinkoff.fintech.lab.domain.model.FilmModel
-
 sealed interface ListState {
     val filmType: FilmType
         get() = FilmType.POPULAR
