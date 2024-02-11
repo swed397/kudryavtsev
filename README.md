@@ -58,11 +58,7 @@ TOP_100_POPULAR_FILMS .
 
 ## Screenshots
 <img width="384" alt="image" src="https://github.com/swed397/kudryavtsev/assets/28994194/2ef4619b-8bb4-4f2b-b80d-1092a2b14f6c"><img width="385" alt="image" src="https://github.com/swed397/kudryavtsev/assets/28994194/2761e00c-01ed-4dc6-a560-23203682e6fd"><img width="371" alt="image" src="https://github.com/swed397/kudryavtsev/assets/28994194/b04392ef-70a4-46dd-bf10-e291a490fa29"><img width="371" alt="image" src="https://github.com/swed397/kudryavtsev/assets/28994194/f3f37dd9-6831-4bfe-bc2a-ad905aafa014"><img width="472" alt="image" src="https://github.com/swed397/kudryavtsev/assets/28994194/ce0d00f2-9b51-41ac-8560-d84d0e200b01"><img width="466" alt="image" src="https://github.com/swed397/kudryavtsev/assets/28994194/80cbaf0c-0283-4f12-8dbd-7f98e294d0b9"><img width="361" alt="image" src="https://github.com/swed397/kudryavtsev/assets/28994194/285302e7-5103-41a7-be06-bfbcd61f8be9"><img width="375" alt="image" src="https://github.com/swed397/kudryavtsev/assets/28994194/a90fc0ae-f9a1-4818-85a5-31bece8e5e50">
-
-
-
-
-
-
-
-
+## Demo
+https://github.com/swed397/kudryavtsev/assets/28994194/1e1da85d-a3b9-445d-8fdf-e88d72490750
+https://github.com/swed397/kudryavtsev/assets/28994194/98229427-5179-4cb4-83a2-9a70a02828e9
+https://github.com/swed397/kudryavtsev/assets/28994194/ce59c464-4d3d-4b04-8423-ceb8b3d6c67c
