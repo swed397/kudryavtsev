@@ -1,7 +1,5 @@
 package tinkoff.fintech.lab.domain.model
 
-import android.health.connect.datatypes.units.Length
-
 data class FilmModel(
     val id: Long,
     val nameRus: String,

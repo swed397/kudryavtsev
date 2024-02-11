@@ -11,7 +11,6 @@ import kotlinx.coroutines.launch
 import tinkoff.fintech.lab.data.repo.FilmRepo
 import tinkoff.fintech.lab.domain.mapper.toUiModel
 import tinkoff.fintech.lab.domain.model.FilmType
-import tinkoff.fintech.lab.ui.list.ListState
 import tinkoff.fintech.lab.util.runSuspendCatching
 
 class DetailsViewModel @AssistedInject constructor(
