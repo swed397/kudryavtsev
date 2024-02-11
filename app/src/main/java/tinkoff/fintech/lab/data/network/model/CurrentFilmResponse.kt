@@ -32,7 +32,7 @@ data class CurrentFilmResponse(
     val posterUrl: String?,
 
     @SerializedName("filmLength")
-    val filmLength: String? = null,
+    val filmLength: Int? = null,
 
     @SerializedName("description")
     val description: String? = null

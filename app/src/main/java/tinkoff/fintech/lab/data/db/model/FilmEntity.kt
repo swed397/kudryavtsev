@@ -17,5 +17,5 @@ data class FilmEntity(
     @ColumnInfo("poster_url_preview") val posterUrlPreview: String,
     @ColumnInfo("poster_url") val posterUrl: String,
     @ColumnInfo("description") val description: String,
-    @ColumnInfo("film_length") val filmLength: String,
+    @ColumnInfo("film_length") val filmLength: Int,
 )

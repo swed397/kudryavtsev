@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +21,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -30,6 +32,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
@@ -51,28 +55,46 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import tinkoff.fintech.lab.App
 import tinkoff.fintech.lab.R
 import tinkoff.fintech.lab.di.injectedViewModel
+import tinkoff.fintech.lab.domain.model.FilmType
+import tinkoff.fintech.lab.ui.details.DetailsScreen
+import tinkoff.fintech.lab.ui.details.DetailsState
 
 @Composable
-fun ListScreenHolder() {
+fun ListScreenHolder(navController: NavController) {
     val context = LocalContext.current.applicationContext
     val viewModel = injectedViewModel {
-        (context as App).appComponent.listViewModelFactory.create()
+        (context as App).appComponent.listViewModelFactory.create(navController)
     }
     val state by viewModel.state.collectAsState()
+
+    val config = LocalConfiguration.current
+
+    LaunchedEffect(config) {
+        viewModel.obtainEvent(
+            ListEvent.OnOrientationChange(config.orientation)
+        )
+    }
 
     ListScreen(state, viewModel::obtainEvent)
 }
 
 @Composable
-private fun ListScreen(state: ListState, onEvent: (ListEvent) -> Unit) {
-
+private fun ListScreen(
+    state: ListState,
+    onEvent: (ListEvent) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Scaffold(
         topBar = { TopBar(state, onEvent) },
-        bottomBar = { BottomBar(state.filmType, onEvent) }
+        bottomBar = { BottomBar(state.filmType, onEvent) },
+        modifier = modifier
+            .systemBarsPadding()
+            .background(Color.White)
     ) { padding ->
         Box(
             contentAlignment = Alignment.Center,
@@ -82,18 +104,82 @@ private fun ListScreen(state: ListState, onEvent: (ListEvent) -> Unit) {
                 .background(Color.White)
         ) {
             when (state) {
-                is ListState.Data -> FilmsList(
-                    data = state.visibleData,
-                    onEvent = onEvent
-                )
+                is ListState.Data -> {
+                    if (state.filmDetails != null) {
+                        Row(Modifier.fillMaxSize()) {
+                            FilmsList(
+                                data = state.visibleData,
+                                onEvent = onEvent,
+                                modifier = Modifier.weight(1f)
+                            )
+
+                            DetailsScreen(
+                                state = DetailsState.Data(filmDetails = state.filmDetails),
+                                onNavigate = {},
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+
+                    } else {
+                        FilmsList(
+                            data = state.visibleData,
+                            onEvent = onEvent
+                        )
+                    }
+                }
 
                 is ListState.Loading -> CircularProgressIndicator(
                     modifier = Modifier
                         .width(64.dp)
                 )
+
+                is ListState.NoContent -> NoContentScreen()
+                ListState.Error -> ErrorScreen(onEvent)
             }
         }
     }
+}
+
+@Composable
+private fun ErrorScreen(onEvent: (ListEvent) -> Unit) {
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.baseline_cloud_off_24),
+            contentDescription = "error icon",
+            tint = Color.Blue,
+            modifier = Modifier.size(100.dp)
+        )
+
+        Text(
+            text = "Произошла ошибка при загрузке данных, проверьте подключение к сети",
+            fontSize = 14.sp,
+            color = Color.Blue,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 10.dp)
+        )
+        Button(
+            onClick = { onEvent.invoke(ListEvent.ReloadData) },
+            modifier = Modifier.padding(top = 20.dp)
+        ) {
+            Text(text = "Повторить")
+        }
+    }
+}
+
+@Composable
+private fun NoContentScreen() {
+    Text(
+        "Не найдено",
+        textAlign = TextAlign.Center,
+        fontSize = 16.sp,
+        modifier = Modifier
+            .size(width = 127.dp, height = 38.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(Color.Blue)
+    )
 }
 
 @Composable
@@ -151,7 +237,9 @@ private fun TopBar(state: ListState, onEvent: (ListEvent) -> Unit) {
             screenTitle = if (state.filmType == FilmType.POPULAR) stringResource(id = R.string.tab_name_popular) else stringResource(
                 id = R.string.tab_name_favorites
             ),
-            onClickIcon = { isSearching = isSearching.not() }
+            onClickIcon = {
+                isSearching = isSearching.not()
+            }
         )
     }
 }
@@ -160,12 +248,14 @@ private fun TopBar(state: ListState, onEvent: (ListEvent) -> Unit) {
 @Composable
 private fun SearchText(onClickIcon: () -> Unit, onEvent: (ListEvent) -> Unit) {
     var searchText by remember { mutableStateOf("") }
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 16.dp, top = 10.dp)
+            .background(Color.White)
     ) {
         Icon(
             painter = painterResource(id = R.drawable.baseline_arrow_back_24),
@@ -174,8 +264,6 @@ private fun SearchText(onClickIcon: () -> Unit, onEvent: (ListEvent) -> Unit) {
                 .size(24.dp)
                 .clickable { onClickIcon.invoke() }
         )
-
-        val keyboardController = LocalSoftwareKeyboardController.current
 
         OutlinedTextField(
             value = searchText,
@@ -212,6 +300,7 @@ private fun ScreenTitle(screenTitle: String, onClickIcon: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 16.dp, top = 30.dp)
+            .background(Color.White)
     ) {
         Text(
             screenTitle,
@@ -230,9 +319,13 @@ private fun ScreenTitle(screenTitle: String, onClickIcon: () -> Unit) {
 }
 
 @Composable
-private fun FilmsList(data: List<FilmListUiModel>, onEvent: (ListEvent) -> Unit) {
+private fun FilmsList(
+    data: List<FilmListUiModel>,
+    onEvent: (ListEvent) -> Unit,
+    modifier: Modifier = Modifier
+) {
     LazyColumn(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(10.dp)
     ) {
@@ -245,7 +338,10 @@ private fun FilmsList(data: List<FilmListUiModel>, onEvent: (ListEvent) -> Unit)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun FilmItem(film: FilmListUiModel, onEvent: (ListEvent) -> Unit) {
+private fun FilmItem(
+    film: FilmListUiModel,
+    onEvent: (ListEvent) -> Unit
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -258,7 +354,14 @@ private fun FilmItem(film: FilmListUiModel, onEvent: (ListEvent) -> Unit) {
             )
             .background(Color.White)
             .combinedClickable(
-                onClick = {},
+                onClick = {
+                    onEvent.invoke(
+                        ListEvent.NavigateToFilmDetails(
+                            filmId = film.filmId,
+                            isFavorite = film.isFavorite
+                        )
+                    )
+                },
                 onLongClick = {
                     onEvent.invoke(ListEvent.AddFilmToFavorite(film.filmId))
                 }
@@ -288,7 +391,7 @@ private fun FilmItem(film: FilmListUiModel, onEvent: (ListEvent) -> Unit) {
                 modifier = Modifier.widthIn(max = 184.dp)
             )
             Text(
-                text = "${film.filmGenreString} (${film.filmYear})",
+                text = "${film.filmGenre} (${film.filmYear})",
                 fontSize = 14.sp,
                 color = Color.Gray,
                 modifier = Modifier.padding(top = 2.dp)
@@ -312,7 +415,7 @@ private fun ListScreenHolderPreview() {
             filmId = 1,
             filmTitle = "Test film",
             filmYear = 2000,
-            filmGenreString = "test",
+            filmGenre = "test",
             filmPosterUrl = "",
             isFavorite = true
         ),
@@ -320,7 +423,7 @@ private fun ListScreenHolderPreview() {
             filmId = 2,
             filmTitle = "Test film",
             filmYear = 2000,
-            filmGenreString = "test",
+            filmGenre = "test",
             filmPosterUrl = "",
             isFavorite = false
         ),
@@ -328,11 +431,11 @@ private fun ListScreenHolderPreview() {
             filmId = 3,
             filmTitle = "Test film",
             filmYear = 2000,
-            filmGenreString = "test",
+            filmGenre = "test",
             filmPosterUrl = "",
             isFavorite = true
         )
     )
 
-    ListScreen(ListState.Data(data, data, FilmType.POPULAR), {})
+    ListScreen(ListState.Data(data = data, visibleData = data, filmType = FilmType.POPULAR), {})
 }

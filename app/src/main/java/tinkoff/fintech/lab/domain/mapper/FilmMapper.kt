@@ -32,7 +32,7 @@ fun CurrentFilmResponse.toEntity(): FilmEntity =
         rating = rating ?: "",
         posterUrlPreview = posterUrlPreview ?: "",
         posterUrl = posterUrl ?: "",
-        filmLength = filmLength ?: "",
+        filmLength = filmLength ?: 0,
         description = description ?: ""
     )
 
@@ -41,7 +41,7 @@ fun FilmModel.toUiModel(isFavorite: Boolean): FilmListUiModel =
         filmId = id,
         filmPosterUrl = posterUrlPreview,
         filmTitle = nameRus,
-        filmGenreString = genre,
+        filmGenre = genre,
         filmYear = year,
         isFavorite = isFavorite
     )

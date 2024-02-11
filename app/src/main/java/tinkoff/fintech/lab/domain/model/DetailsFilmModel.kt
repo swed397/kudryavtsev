@@ -1,8 +1,6 @@
 package tinkoff.fintech.lab.domain.model
 
-import android.health.connect.datatypes.units.Length
-
-data class FilmModel(
+data class DetailsFilmModel(
     val id: Long,
     val nameRus: String,
     val nameEng: String,
@@ -11,6 +9,7 @@ data class FilmModel(
     val genre: String,
     val countries: String,
     val rating: String,
-    val posterUrlPreview: String,
-    val posterUrl: String
+    val posterUrl: String,
+    val description: String,
+    val filmLength: String
 )

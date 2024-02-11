@@ -16,7 +16,7 @@ class FilmRepo @Inject constructor(
     suspend fun getAllPopularFilms(): List<FilmModel> =
         kinopoiskApi.getTopFilms().films.map { it.toModel() }
 
-    suspend fun getFilmById(filmId: Long): CurrentFilmResponse =
+    suspend fun getPopularFilmById(filmId: Long): CurrentFilmResponse =
         kinopoiskApi.getFilmById(filmId = filmId)
 
     suspend fun saveFilmInDb(filmEntity: FilmEntity) = filmDb.filmDao().insertFilm(filmEntity)
@@ -25,4 +25,7 @@ class FilmRepo @Inject constructor(
 
     suspend fun getFavoriteFilms(): List<FilmModel> =
         filmDb.filmDao().getAllFilms().map { it.toModel() }
+
+    suspend fun getFavoriteFilmById(filmId: Long): FilmEntity =
+        filmDb.filmDao().getFilmById(filmId = filmId)
 }
