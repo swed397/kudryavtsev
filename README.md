@@ -26,19 +26,43 @@ Tinkoff fintech lab
   3. При просмотре популярных выделяются фильмы, находящиеся в избранном.
   4. В разделах доступен поиск фильмов по наименованию.
 # Так же будет здорово, если:
-  Приложение написано на Kotlin.
-  Обеспечена общая плавность и стабильность приложения.
-  Во время длительных загрузок, отображаются шиммеры/ прогресс бары.
-  Ответы от API должны быть закешированы хотя бы на время сессии.
-  Приложение покрыто UNIT тестами.
+  - Приложение написано на Kotlin.
+  - Обеспечена общая плавность и стабильность приложения.
+  - Во время длительных загрузок, отображаются шиммеры/ прогресс бары.
+  - Ответы от API должны быть закешированы хотя бы на время сессии.
+  - Приложение покрыто UNIT тестами.
 # * Примечания к реализации:
-  Для получения топа фильмов используйте get запрос /api/v2.2/films/top с параметрами type =
+  - Для получения топа фильмов используйте get запрос /api/v2.2/films/top с параметрами type =
 TOP_100_POPULAR_FILMS .
-  Для получения описания фильма используйте get запрос /api/v2.2/films/top/<id фильма>
-  В качестве ключа API можно использовать e30ffed0-76ab-4dd6-b41f-4c9da2b2735b, этот ключ не
+  - Для получения описания фильма используйте get запрос /api/v2.2/films/top/<id фильма>
+  - В качестве ключа API можно использовать e30ffed0-76ab-4dd6-b41f-4c9da2b2735b, этот ключ не
 имеет ограничений по количеству запросов в сутки, но имеет ограничение 20 запросов в
 секунду. В качестве альтернативы вы можете зарегистрироваться самостоятельно и получить
 собственный ключ, но тогда будет действовать ограничение в 500 запросов в день, учитывайте
 это в момент отладки приложения.
-  Мы предлагаем следовать примеру нашего дизайна, который можно посмотреть тут. Но если
+  - Мы предлагаем следовать примеру нашего дизайнf. Но если
 вы уверены, что Ваш вариант дизайна будет лучше – можете сделать по своему.
+
+## Figma: https://www.figma.com/file/Wki59SggNTgE3pXJRvUS1A/Fintech2023?type=design&node-id=0-1&mode=design&t=G5G46NURI3BfDrW4-0
+## Api: https://kinopoiskapiunofficial.tech
+
+# Realisation
+- Kotlin
+- Coroutines
+- Flow
+- Dagger2
+- Retrofit
+- Room
+- Compose
+- MVI
+
+## Screenshots
+<img width="384" alt="image" src="https://github.com/swed397/kudryavtsev/assets/28994194/2ef4619b-8bb4-4f2b-b80d-1092a2b14f6c"><img width="385" alt="image" src="https://github.com/swed397/kudryavtsev/assets/28994194/2761e00c-01ed-4dc6-a560-23203682e6fd"><img width="371" alt="image" src="https://github.com/swed397/kudryavtsev/assets/28994194/b04392ef-70a4-46dd-bf10-e291a490fa29"><img width="371" alt="image" src="https://github.com/swed397/kudryavtsev/assets/28994194/f3f37dd9-6831-4bfe-bc2a-ad905aafa014"><img width="472" alt="image" src="https://github.com/swed397/kudryavtsev/assets/28994194/ce0d00f2-9b51-41ac-8560-d84d0e200b01"><img width="466" alt="image" src="https://github.com/swed397/kudryavtsev/assets/28994194/80cbaf0c-0283-4f12-8dbd-7f98e294d0b9"><img width="361" alt="image" src="https://github.com/swed397/kudryavtsev/assets/28994194/285302e7-5103-41a7-be06-bfbcd61f8be9"><img width="375" alt="image" src="https://github.com/swed397/kudryavtsev/assets/28994194/a90fc0ae-f9a1-4818-85a5-31bece8e5e50">
+
+
+
+
+
+
+
+
