@@ -11,6 +11,8 @@ import kotlinx.coroutines.launch
 import tinkoff.fintech.lab.data.repo.FilmRepo
 import tinkoff.fintech.lab.domain.mapper.toUiModel
 import tinkoff.fintech.lab.domain.model.FilmType
+import tinkoff.fintech.lab.ui.list.ListState
+import tinkoff.fintech.lab.util.runSuspendCatching
 
 class DetailsViewModel @AssistedInject constructor(
     private val filmRepo: FilmRepo,
@@ -30,13 +32,21 @@ class DetailsViewModel @AssistedInject constructor(
 
     private fun getPopularFilmById(filmId: Long) {
         viewModelScope.launch {
-            _state.emit(DetailsState.Data(filmRepo.getPopularFilmById(filmId).toUiModel()))
+            runSuspendCatching(
+                action = { filmRepo.getPopularFilmById(filmId).toUiModel() },
+                onSuccess = { data -> _state.value = DetailsState.Data(data) },
+                onError = { _state.value = DetailsState.Error }
+            )
         }
     }
 
     private fun getFavoriteFilmById(filmId: Long) {
         viewModelScope.launch {
-            _state.emit(DetailsState.Data(filmRepo.getFavoriteFilmById(filmId).toUiModel()))
+            runSuspendCatching(
+                action = { filmRepo.getFavoriteFilmById(filmId).toUiModel() },
+                onSuccess = { data -> _state.value = DetailsState.Data(data) },
+                onError = { _state.value = DetailsState.Error }
+            )
         }
     }
 

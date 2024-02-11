@@ -48,7 +48,7 @@ class MainActivity : ComponentActivity() {
                             DetailsScreenHolder(
                                 filmId = filmId,
                                 filmType = filmType,
-                                onNavigate = navController::navigate
+                                onNavigateBack = navController::popBackStack
                             )
                         }
                     }
