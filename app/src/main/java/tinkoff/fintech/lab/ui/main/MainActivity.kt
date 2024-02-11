@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            TinkofffintechlabTheme {
+            TinkofffintechlabTheme(darkTheme = false) {
                 val navController = rememberNavController()
 
                 Surface(
